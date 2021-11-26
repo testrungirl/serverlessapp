@@ -7,6 +7,7 @@ import { TodoItem } from '../models/TodoItem'
 const XAWS = AWSXRay.captureAWS(AWS)
 
 
+
 export class TodoAccess {
 
   constructor(
@@ -50,6 +51,8 @@ export class TodoAccess {
 function createDynamoDBClient() {
   if (process.env.IS_OFFLINE) {
     console.log('Creating a local DynamoDB instance')
+
+    // const AWSXRay = require('aws-xray-sdk');
     return new XAWS.DynamoDB.DocumentClient({
       region: 'localhost',
       endpoint: 'http://localhost:8000'

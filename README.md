@@ -1,7 +1,7 @@
 # Serverless Development and Deployment (Udacity Homework)
 Submission for Udacity Cloud Developer program homework #4.
 This program achieves the following:
-- In this project you will develop an Instagram-like serverless services for uploading, listing, and filtering images. You will begin with building serverless REST APIs using API Gateway and AWS Lambda, a stack of serverless technologies on AWS. You will then implement an API to interact with this application, store data in AWS DynamoDB, S3, and Elasticsearch, secure your application with authentication, and deploy to Amazon Web Services using Serverless framework. These are the hard skills you’ll need to develop serverless applications.
+- In this project I developed an Instagram-like serverless services for uploading, listing, and filtering images. I began with building serverless REST APIs using API Gateway and AWS Lambda, a stack of serverless technologies on AWS. I then implement an API to interact with this application, store data in AWS DynamoDB, S3, and Elasticsearch, secure your application with authentication, and deploy to Amazon Web Services using Serverless framework. These are the hard skills one needs to develop serverless applications.
 
 # Usage
 ### Installation
@@ -12,4 +12,7 @@ This program achieves the following:
 - Once complete, you will be given the URL for testing with Postman. 
 
 ### Kudos
-Kudos to my fellow classmates in the chatgroups whom are the true heroes of this course.
+Kudos to my fellow classmates and wallacewong who guided me on this project. And to the Course Instructor who was very graceful with it and Faith also.
+
+### Author
+Emike - @testrungirl

@@ -10,6 +10,7 @@
     "target": "es2017",
     "outDir": "lib"
   },
+  "typeRoots": ["node_modules/@types"],
   "exclude": [
     "node_modules"
   ]
