@@ -69,7 +69,6 @@ export async function getUploadUrl(
       'Authorization': `Bearer ${idToken}`
     }
   })
-  console.log("AuthToken loggedByFaith: "+idToken)
   return response.data.uploadUrl
 }
 

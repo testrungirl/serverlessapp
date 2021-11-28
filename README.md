@@ -11,11 +11,6 @@ This program achieves the following:
 - Once this is set up, you can run the command to deploy to AWS Lambda using `sls deploy -v`. This will send the code to AWS to run and set up. 
 - Once complete, you will be given the URL for testing with Postman. 
 
-### SPECIAL NOTEs
-- Use Node 14.X 14.2.0 particularly for both the client and backend apps. This is easier if you have nvm installed where you can use a specific node runtime version => nvm use 14.2.0 
-- It may be absolutely necessary to delete your package-lock.json file and the install all dependencies again using *npm install
-- So once again use Node 14.2.0 AND (npm v6.14.4)
-
 ### Kudos
 Kudos to my fellow classmates and wallacewong who guided me on this project. And to the Course Instructor who was very graceful with it and Faith also.
 
