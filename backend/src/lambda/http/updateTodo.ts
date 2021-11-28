@@ -45,7 +45,9 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
 
   console.log("updateditem is ", updatedItem)
 
+  //const res = await todoAccessCrud.updateTodoV2(parseUserId(jwtToken), todoId, updatedItem)
   const res = await todoAccessCrud.updateTodo(updatedItem)
+
   console.log("Updated todoItem res", JSON.stringify(res))
   console.log("Updated todoItem", JSON.stringify(updatedItem))
 

@@ -58,6 +58,31 @@ class TodoAccess {
     return updatedItem
   }
 
+  public async updateTodoV2(todoId: string, userId: string, todo: TodoItem) {
+    const result = await this.docClient
+      .update({
+        TableName: todosTable,
+        Key: {
+          todoId,
+          userId
+        },
+        UpdateExpression: 'set #name = :name, dueDate = :dueDate, done= :done',
+        ExpressionAttributeValues: {
+          ':name': todo.name,
+          ':dueDate': todo.dueDate,
+          ':done': todo.done
+        },
+        ExpressionAttributeNames: {
+          '#name': 'name'
+        },
+        ReturnValues: 'ALL_NEW'
+      })
+      .promise()
+    console.log('Updated todo', result)
+
+    return result.Attributes as TodoItem
+  }
+
   public async todoExists(todoId: string){
     const result = await this.docClient
       .get({
@@ -72,7 +97,7 @@ class TodoAccess {
       return !!result.Item
   }
 
-  public async deleteTodo(userId, todoId) {
+  public async deleteTodo(userId: string, todoId: string) {
     const result = await this.docClient
       .delete({
         TableName: todosTable,
@@ -84,6 +109,26 @@ class TodoAccess {
       .promise()
     console.log('Deleted Item successfully', result)
     return result
+
+    // KeyConditionExpression=
+    //         Key('title').eq('This is a Good Book') & Key('author').eq('Jon Doe')
+
+
+  }
+
+  public async getTodo(userId: string, todoId: string) {
+    console.log('Retrieving a todo, data=' + JSON.stringify({ userId, todoId }))
+    const existingTodo = await this.docClient
+      .get({
+        TableName: todosTable,
+        Key: {
+          todoId,
+          userId
+        }
+      })
+      .promise()
+
+    return existingTodo.Item
   }
   
 
@@ -99,7 +144,7 @@ class TodoAccess {
       ScanIndexForward: false
   }).promise()
 
-
+  
   let todos = result.Items;
     todos = todos.map(todo=> ({
       ...todo,

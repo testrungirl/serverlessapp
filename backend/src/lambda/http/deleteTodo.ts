@@ -1,7 +1,14 @@
 import 'source-map-support/register'
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda'
 import {parseUserId } from '../../auth/utils'
-import {_TodoAccess as todoAccessCrud} from '../../dataLayer/todosAccess'
+// import {_TodoAccess as todoAccessCrud} from '../../dataLayer/todosAccess'
+import * as AWS from 'aws-sdk'
+import * as AWSXRay from 'aws-xray-sdk'
+
+const XAWS = AWSXRay.captureAWS(AWS)
+
+const docClient = new XAWS.DynamoDB.DocumentClient()
+const todosTable = process.env.TODOS_TABLE
 
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
@@ -11,7 +18,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   const split = authorization.split(' ')
   const jwtToken = split[1]
 
-  const validTodoId = await todoAccessCrud.todoExists(todoId)
+  const validTodoId = await todoExists(todoId)
   console.log("def")
   if (!validTodoId){
     return{
@@ -26,18 +33,23 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   }
 
   console.log("abc")
-  const userId = parseUserId(jwtToken)
-  const res = await todoAccessCrud.deleteTodo(userId, todoId)
-  console.log("Deleted todoItem res", JSON.stringify(res))
-
-
-  // docClient.delete(params, function(err, data) {
-  //   if (err) {
-  //       console.error("Unable to delete item. Error JSON:", JSON.stringify(err, null, 2))
-  //   } else {
-  //       console.log("DeleteItem succeeded:", JSON.stringify(data, null, 2))
-  //   }
-  // })
+  //
+  var params = {
+    TableName: todosTable,
+    userId: parseUserId(jwtToken),
+    Key: {
+      todoId: todoId
+    }
+  }
+  console.log("params", params)
+  //
+  docClient.delete(params, function(err, data) {
+    if (err) {
+        console.error("Unable to delete item. Error JSON:", JSON.stringify(err, null, 2))
+    } else {
+        console.log("DeleteItem succeeded:", JSON.stringify(data, null, 2))
+    }
+  })
   // TODO: Remove a TODO item by id
   return {
     statusCode: 201,
@@ -46,4 +58,19 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
     },
     body:'Item deleted'
   }
+}
+
+
+async function todoExists(todoId: string){
+  const result = await docClient
+    .get({
+      TableName: todosTable,
+      Key:{
+        todoId: todoId
+      }
+    })
+    .promise()
+
+    console.log('Get todo: ', result)
+    return !!result.Item
 }
