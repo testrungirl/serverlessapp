@@ -4,8 +4,13 @@
   "type": "object",
   "properties": {
     "name": {
+<<<<<<< HEAD
       "minLength":3,
       "type": "string"
+=======
+      "type": "string",
+      "minLength": 3
+>>>>>>> b3b013d9ae79be29aa94246fbd4d0c1e82ad53c1
     },
     "dueDate": {
       "type": "string"

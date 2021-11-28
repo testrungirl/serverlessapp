@@ -1,15 +1,9 @@
 import 'source-map-support/register'
-import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
-import * as AWS from 'aws-sdk'
-import * as AWSXRay from 'aws-xray-sdk'
+import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda'
+import {_TodoAccess as todoAccessCrud} from '../../dataLayer/todosAccess'
+
 import {parseUserId } from '../../auth/utils'
 
-const XAWS = AWSXRay.captureAWS(AWS)
-
-const docClient = new XAWS.DynamoDB.DocumentClient()
-
-const todosTable = process.env.TODOS_TABLE
-const userIdIndex = process.env.USERID_INDEX
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   // TODO: Get all TODO items for a current user
@@ -20,36 +14,14 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   const jwtToken = split[1]
 
 
-  // var params = {
-  //   TableName: todosTable,
-  //   FilterExpression: "#userId = :userId",
-  //   ExpressionAttributeNames:{
-  //     "#userId": "userId",
-  //   },
-  //   ExpressionAttributeValues:{
-  //     ":userId": parseUserId(jwtToken)
-  //   }
-  // };
-  //
-  // const result = await docClient.scan(params).promise()
+  const result = await todoAccessCrud.getTodos(parseUserId(jwtToken));
 
-  const result = await docClient.query({
-      TableName : todosTable,
-      IndexName : userIdIndex,
-      KeyConditionExpression: 'userId = :userId',
-      ExpressionAttributeValues: {
-          ':userId': parseUserId(jwtToken)
-      },
-
-      ScanIndexForward: false
-  }).promise()
-
-  const items = result.Items
+  const items = result
 
   return {
     statusCode:200,
     headers:{
-      'Access-Control-Allow-Origin': '*'
+      'Access-Control-Allow-Origin': '*',
     },
     body: JSON.stringify({
       items

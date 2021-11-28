@@ -1,19 +1,11 @@
 import 'source-map-support/register'
-import { APIGatewayProxyEvent, APIGatewayProxyResult, APIGatewayProxyHandler } from 'aws-lambda'
-import * as AWS from 'aws-sdk'
+import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda'
 import * as uuid from 'uuid'
 import {parseUserId } from '../../auth/utils'
-import * as AWSXRay from 'aws-xray-sdk'
 
-const XAWS = AWSXRay.captureAWS(AWS)
+import {_TodoAccess as todoAccessCrud} from '../../dataLayer/todosAccess'
+import {AttachmentAccess as attachmentCrud} from '../../dataLayer/attachmentAccess'
 
-const docClient = new XAWS.DynamoDB.DocumentClient()
-const s3 = new XAWS.S3({
-  signatureVersion: 'v4'
-})
-
-const todosTable = process.env.TODOS_TABLE
-const attachmentTable = process.env.ATTACHMENTS_TABLE
 const bucketName = process.env.ATTACHMENTS_S3_BUCKET
 
 
@@ -21,7 +13,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   console.log('Caller event: ', event)
   const todoId = event.pathParameters.todoId
   console.log("todoId ", todoId)
-  const validTodoId = await todoExists(todoId)
+  const validTodoId = await todoAccessCrud.todoExists(todoId)
 
   if (!validTodoId){
     return{
@@ -34,7 +26,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
       })
     }
   }
-  const oldTodoId = await retrieveOld(todoId)
+  const oldTodoId = await todoAccessCrud.retrieveOldTodo(todoId)
   const attachmentId = uuid.v4()
 
   const authorization = event.headers.Authorization
@@ -44,7 +36,8 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   const newItem = await createAttachment(todoId, attachmentId, event, jwtToken, oldTodoId)
 
 
-  const url = getUploadUrl(attachmentId)
+  const url = await attachmentCrud.getUploadUrl(attachmentId)
+  console.log("Upload URL: ", url)
   // TODO: Return a presigned URL to upload a file for a TODO item with the provided id
   return {
     statusCode: 201,
@@ -59,19 +52,6 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   }
 }
 
-async function todoExists(todoId: string){
-  const result = await docClient
-    .get({
-      TableName: todosTable,
-      Key:{
-        todoId: todoId
-      }
-    })
-    .promise()
-
-    console.log('Get todo: ', result)
-    return !!result.Item
-}
 
 async function createAttachment(todoId: string, attachmentId: string, event: any, jwtToken: string, oldTodoId:any) {
   const timestamp = new Date().toISOString()
@@ -88,12 +68,13 @@ async function createAttachment(todoId: string, attachmentId: string, event: any
   }
   console.log('Storing new item: ', newItem)
   //this is backend where we can store the new url
-  await docClient
-    .put({
-      TableName: attachmentTable,
-      Item: newItem
-    })
-    .promise()
+
+  // await docClient
+  //   .put({
+  //     TableName: attachmentTable,
+  //     Item: newItem
+  //   })
+  //   .promise()
 
   const updatedItem = {
     todoId: todoId,
@@ -107,30 +88,5 @@ async function createAttachment(todoId: string, attachmentId: string, event: any
 
   console.log("updateditem is ", updatedItem)
 
-  await docClient.put({
-    TableName: todosTable,
-    Item: updatedItem
-  }).promise()
-  console.log("upload completed!")
-
   return newItem
-}
-
-function getUploadUrl(attachmentId: string) {
-  return s3.getSignedUrl('putObject', {
-    Bucket: bucketName,
-    Key: attachmentId,
-    Expires: 300
-  })
-}
-
-async function retrieveOld(todoId: string){
-  const result = await docClient.get({
-    TableName: todosTable,
-    Key:{
-      todoId: todoId
-    }
-  }).promise()
-
-  return result.Item
 }

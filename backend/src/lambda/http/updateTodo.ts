@@ -1,21 +1,16 @@
 import 'source-map-support/register'
 import { APIGatewayProxyEvent, APIGatewayProxyHandler, APIGatewayProxyResult } from 'aws-lambda'
 import { UpdateTodoRequest } from '../../requests/UpdateTodoRequest'
-import * as AWS from 'aws-sdk'
 import {parseUserId } from '../../auth/utils'
-import * as AWSXRay from 'aws-xray-sdk'
+import {_TodoAccess as todoAccessCrud} from '../../dataLayer/todosAccess'
 
-const XAWS = AWSXRay.captureAWS(AWS)
-
-const docClient = new XAWS.DynamoDB.DocumentClient()
-const todosTable = process.env.TODOS_TABLE
 
 export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
   console.log("Caller event", event)
   const todoId = event.pathParameters.todoId
   console.log("todoId ", todoId)
 
-  const validTodoId = await todoExists(todoId)
+  const validTodoId = await todoAccessCrud.todoExists(todoId)
 
   if (!validTodoId){
     return{
@@ -33,7 +28,7 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
   const split = authorization.split(' ')
   const jwtToken = split[1]
 
-  const oldTodoId = await retrieveOld(todoId)
+  const oldTodoId = await todoAccessCrud.retrieveOldTodo(todoId)
   console.log(oldTodoId.CreatedAt)
 
   const updatedTodo: UpdateTodoRequest = JSON.parse(event.body)
@@ -50,11 +45,11 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
 
   console.log("updateditem is ", updatedItem)
 
-  await docClient.put({
-    TableName: todosTable,
-    Item: updatedItem
-  }).promise()
+  //const res = await todoAccessCrud.updateTodoV2(parseUserId(jwtToken), todoId, updatedItem)
+  const res = await todoAccessCrud.updateTodo(updatedItem)
 
+  console.log("Updated todoItem res", JSON.stringify(res))
+  console.log("Updated todoItem", JSON.stringify(updatedItem))
 
   // TODO: Update a TODO item with the provided id using values in the "updatedTodo" object
   return {
@@ -66,29 +61,4 @@ export const handler: APIGatewayProxyHandler = async (event: APIGatewayProxyEven
       updatedItem
     })
   }
-}
-
-async function todoExists(todoId: string){
-  const result = await docClient
-    .get({
-      TableName: todosTable,
-      Key:{
-        todoId: todoId
-      }
-    })
-    .promise()
-
-    console.log('Get todo: ', result)
-    return !!result.Item
-}
-
-async function retrieveOld(todoId: string){
-  const result = await docClient.get({
-    TableName: todosTable,
-    Key:{
-      todoId: todoId
-    }
-  }).promise()
-
-  return result.Item
 }
