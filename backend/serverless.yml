@@ -16,7 +16,7 @@ provider:
   runtime: nodejs14.x
 
   stage: ${opt:stage, 'dev'}
-  region: us-west-2
+  region: us-east-1
 
   environment:
     TODOS_TABLE: Todos-${self:provider.stage}
@@ -199,8 +199,10 @@ resources:
           - AttributeName: userId
             AttributeType: S
         KeySchema:
-          - AttributeName: todoId
+          - AttributeName: userId
             KeyType: HASH
+          - AttributeName: todoId
+            KeyType: RANGE
         GlobalSecondaryIndexes:
           - IndexName: ${self:provider.environment.USERID_INDEX}
             KeySchema:
@@ -260,6 +262,6 @@ resources:
             - Sid: PublicReadForGetBucketObjects
               Effect: Allow
               Principal: '*'
-              Action: 's3:GetObject'
+              Action: ['s3:GetObject', 's3:PutObject']
               Resource: 'arn:aws:s3:::${self:provider.environment.ATTACHMENTS_S3_BUCKET}/*'
         Bucket: !Ref AttachmentsBucket

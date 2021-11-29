@@ -69,10 +69,13 @@ export async function getUploadUrl(
       'Authorization': `Bearer ${idToken}`
     }
   })
+  console.log("Id Token in Attachment Upload Form:", JSON.stringify(idToken))
   return response.data.uploadUrl
 }
 
 export async function uploadFile(uploadUrl: string, file: Buffer): Promise<void> {
-  await Axios.put(uploadUrl, file)
   
+  await Axios.put(uploadUrl, file)
+//console.log("Id Token in Attachment Upload Form:", JSON.stringify(idToken))
+// return response.data.uploadUrl
 }

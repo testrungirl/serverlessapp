@@ -29,7 +29,7 @@ export const handler = async (event: CustomAuthorizerEvent): Promise<CustomAutho
   try {
     const jwtToken = verifyToken(event.authorizationToken)
     console.log('User was authorized', jwtToken)
-
+    
     return {
       principalId: jwtToken.sub,
       policyDocument: {
